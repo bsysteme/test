@@ -1,0 +1,71 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
+
+/* gcc -o aufgabe2 aufgabe2cpp */
+
+int main() {
+    pid_t pid; //prozess id
+    int mypipe[2]; //pipe
+    int ret;
+    char buf[50]; // nach read hier speichern
+    char entry[50]; // cin eingabe
+    char stop[10] = {"stop"};
+    char report[10] = {"report"};
+    ret = pipe(mypipe);
+    if (ret == -1) {
+        perror("pipe");
+        exit(1);
+    }
+
+    pid = fork();
+    if (pid != 0)
+
+   {
+        printf("kommandant\n");
+
+        while (0 == waitpid(pid, 0, WNOHANG)) {
+            printf("befehle eingabe: ");
+            scanf("%s", entry);
+            write(mypipe[1], entry, sizeof (entry) / sizeof (char));
+    }
+
+    
+      wait(0);
+        exit(0);
+    }
+    else 
+    {
+        while (true) 
+        {
+            read(mypipe[0], buf, sizeof (buf) / sizeof (char));
+            if ((strcmp(stop, buf)) == 0) {
+                printf("exit...");
+                sleep(2);
+                exit(0);
+            } else if ((strcmp(report, buf)) == 0) 
+            {
+                int rPID = fork();
+                if (rPID == 0) 
+                {
+                    printf("Reporter\n");
+                    printf("child: child pid=%d, parent pid=%d\n", getpid(), getppid());
+                    sleep(2);
+                    exit(0);
+                } else 
+                {
+                    int status;
+                    wait(&status);
+                    printf("finished reporting\n");
+                }
+            } else 
+            {
+                printf("befehl ohne wirkung gelesen: %s\n", buf);
+                exit(0);
+            }
+        }
+    }
+    return 0;
+}
