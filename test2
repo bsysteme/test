@@ -1,0 +1,89 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
+
+
+
+int main() {
+  int pipefd[2];
+  pid_t cpid;
+  char buf;
+  int status = 0;
+  int options = WNOHANG;
+  char input[20];
+
+  char stop[] = {"stop"};
+  char report[] = "{report}";
+
+/*if(argc!= 2)
+  {
+    fprintf(stderr, "Usage: %s <string\n", argv[0] );
+  }
+*/
+  if (pipe(pipefd) == -1)
+  {
+    perror("pipe");
+    exit(EXIT_FAILURE);
+  }
+
+  cpid = fork();
+  if (cpid == -1)
+  {
+    perror("fork");
+    exit(EXIT_FAILURE);
+  }
+
+  if(cpid != 0)
+  {
+    printf("Kommandant\n");
+    while (waitpid(cpid, status, options) == 0) {
+      printf("Befehl eingeben:\n", );
+      scanf("%s\n", input );
+      write(pipefd[1], input, sizeof(input) / sizeof(char));
+    }
+    //wait(0);
+    exit(0);
+  }
+
+
+  if(cpid == 0) //child reads from pipe
+  {
+    fprintf("Prozessmanager\n", );
+    //close(pipefd[1]);
+    read(pipefd[0], buf, sizeof(buf) / sizeof(char));
+    if(strcmp(stop, buf) == 0)
+    {
+      printf("exit\n");
+      sleep(4);
+      exit(0);
+    }
+
+    else if(strcmp(report, buf) == 0) 
+    {
+      int reportPID = fork();
+      if(reportPID = 0)
+      {
+        printf("Reporter\n");
+        printf("child: child pid = &%d, parent pid = %d\n", getpid(), getppid());
+        sleep(4);
+        exit(0);
+      }
+      else
+      {
+        int status;
+        wait(&status);
+        printf("Report finished.\n");
+      }
+    }
+      else
+      {
+        printf("Befehl hat keine Wirkung: %s\n", buf );
+        exit(0);
+      }
+    }
+
+    }
+    return 0;
+  }
